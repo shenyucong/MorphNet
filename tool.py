@@ -14,7 +14,7 @@ def dil(k,x,W):
             sigma = 0
             for a = 0:shape_weights[0]-1:
                 for b = 0:shape_weights[1]-1:
-                    sigma += W[a,b,-1,-1]*x[-1,i+a,j+b,-1]
+                    sigma += W[a,b,-1,-1]*tf.exp(x[-1,i+a,j+b,-1])
             output[]-1, i, j, -1] = tf.log(k*sigma)/k
 
     output_image = output[-1,(shape_weights[0]-1)/2-1:shape_input[1]-(shape_weights[0]-1)/2-1,
@@ -34,7 +34,7 @@ def ero(k,x,W):
             sigma = 0
             for a = 0:shape_weights[0]-1:
                 for b = 0:shape_weights[1]-1:
-                    sigma += W[a,b,-1,-1]*x[-1,i+a,j+b,-1]
+                    sigma += W[a,b,-1,-1]*tf.exp(x[-1,i+a,j+b,-1])
             output[]-1, i, j, -1] = -tf.log(-k*sigma)/k
 
     output_image = output[-1,(shape_weights[0]-1)/2-1:shape_input[1]-(shape_weights[0]-1)/2-1,
