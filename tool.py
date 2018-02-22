@@ -1,47 +1,35 @@
 import numpy as np
 import tensorflow as tf
+from im2col import get_im2col_indices
+from im2col import im2col_indices
+from im2col import col2im_indices
 
-def dil(k,x,W):
-    '''k: smoothing parameters
-       x: input tensor in four dimension (in_channels, width, heights, out_channels)
-       W: structuing element (height, width, in_channels, out_channels)'''
-    shape_input = x.get_shape()
-    shape_weights = W.get_shape()
-    shape_output = np.array([shape_input[0], shape_input[1]-shap_weights[0]+1, shape_input[2]-shape_weights+1, shape_input[3]])
-    output = tf.zeros(shape_input, tf.int32)
-    for i = (shape_weights[0]-1)/2-1:shape_input[1]-(shape_weights[0]-1)/2-1:
-        for j = (shape_weights[0]-1)/2-1:shape_input[2]-(shape_weights[0]-1)/2-1:
-            sigma = 0
-            for a = 0:shape_weights[0]-1:
-                for b = 0:shape_weights[1]-1:
-                    sigma += W[a,b,-1,-1]*tf.exp(x[-1,i+a,j+b,-1])
-            output[]-1, i, j, -1] = tf.log(k*sigma)/k
+def dil(X, W, k, stride = 1, padding = 1):
+    #n_filters, d_filter, h_filter, w_filter = tf.shape(W)
+    filter = tf.shape(W)
+    #n_x, d_x, h_x, w_x = tf.shape(X)
+    n = tf.shape(X)
+    h_out = (n[2] - filter[2] + 2 * padding) / stride + 1
+    w_out = (n[3] - filter[3] + 2 * padding) / stride + 1
 
-    output_image = output[-1,(shape_weights[0]-1)/2-1:shape_input[1]-(shape_weights[0]-1)/2-1,
-                          (shape_weights[0]-1)/2-1:ahpe_input[1]-(shape_weights[0]-1)/2-1.-1]
-    return output_image
+    if not h_out.is_integer() or not w_out.is_integer():
+        raise Exception('Invalid output dimension!')
 
-def ero(k,x,W):
-'''k: smoothing parameters
-       x: input tensor in four dimension (in_channels, width, heights, out_channels)
-       W: structuing element (height, width, in_channels, out_channels)'''
-    shape_input = x.get_shape()
-    shape_weights = W.get_shape()
-    shape_output = np.array([shape_input[0], shape_input[1]-shap_weights[0]+1, shape_input[2]-shape_weights+1, shape_input[3]])
-    output = tf.zeros(shape_input, tf.int32)
-    for i = (shape_weights[0]-1)/2-1:shape_input[1]-(shape_weights[0]-1)/2-1:
-        for j = (shape_weights[0]-1)/2-1:shape_input[2]-(shape_weights[0]-1)/2-1:
-            sigma = 0
-            for a = 0:shape_weights[0]-1:
-                for b = 0:shape_weights[1]-1:
-                    sigma += W[a,b,-1,-1]*tf.exp(x[-1,i+a,j+b,-1])
-            output[]-1, i, j, -1] = -tf.log(-k*sigma)/k
+    h_out, w_out = int(h_out), int(w_out)
 
-    output_image = output[-1,(shape_weights[0]-1)/2-1:shape_input[1]-(shape_weights[0]-1)/2-1,
-                          (shape_weights[0]-1)/2-1:ahpe_input[1]-(shape_weights[0]-1)/2-1.-1]
-    return output_image
+    X_col = im2col_indices(X, filter[2], filter[3], padding=padding, stride=stride)
+    #W_col = W.reshape(n_filters, -1)
+    W_col = tf.reshape(W, [filter[0], -1])
 
+    out = tf.log(k* W_col @ exp(X_col))/k
+    #out = out.reshape(n_filters, h_out, w_out, n_x)
+    out = tf.reshape(out,[filter[0], h_out, w_out, n[0]])
+    #out = out.transpose(3, 0, 1, 2)
+    out = tf.transpose(out, perm = [3, 0, 1, 2])
 
+    #cache = (X, W, b, stride, padding, X_col)
+
+    return out
 
 def weight_variable(shape):
     '''weight_variable generates a weight variable of a given shape.'''
